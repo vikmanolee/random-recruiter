@@ -10,6 +10,7 @@ import TextField from '@material-ui/core/TextField';
 import Tooltip from '@material-ui/core/Tooltip';
 import IconButton from '@material-ui/core/IconButton';
 import DeleteButton from '@material-ui/icons/Delete';
+import AssignmentIcon from '@material-ui/icons/Assignment';
 import FaceIcon from '@material-ui/icons/Face';
 import { withStyles } from '@material-ui/core/styles';
 import List from '@material-ui/core/List';
@@ -41,40 +42,26 @@ const styles = (theme) => ({
   },
 });
 
-const applicants = [];
-
-function ApplicantsList(props) {
-  return (
-    <List>
-      {props.items.map(
-        ({id, name}) => (
-          <ListItem key={id}><ListItemText>{name}</ListItemText>
-            <IconButton aria-label="delete">
-              <DeleteButton />
-            </IconButton>
-          </ListItem>)
-      )}
-    </List>
-  );
-}
-
 function Content(props) {
   const { classes } = props;
 
-  const [list, setList] = React.useState(applicants);
+  const [list, setList] = React.useState([]);
   const [name, setName] = React.useState('');
 
   function handleAddApplicant() {
-    const newList = list.concat({ name, id: uuidv4() });
+    if (name !== '') {
+      const newList = list.concat({ name, id: uuidv4() });
+      setList(newList);
+      setName('');
+    }
+  }
+
+  function handleRemoveApplicant(id) {
+    const newList = list.filter((item) => item.id !== id);
     setList(newList);
-    setName('');
   }
 
-  function handleRemoveApplicant() {
-
-  }
-  
-  function handleApplicantListChange(event) {
+  function handleApplicantNameChange(event) {
     setName(event.target.value);
   }
 
@@ -94,18 +81,18 @@ function Content(props) {
             <Grid item xs>
               <TextField
                 fullWidth
-                placeholder="Applicant name or nickname"
+                placeholder="Applicant name"
                 InputProps={{
                   disableUnderline: true,
                   className: classes.searchInput,
                 }}
                 value={name}
-                onChange={handleApplicantListChange}
+                onChange={handleApplicantNameChange}
               />
             </Grid>
             <Grid item>
               <Button variant="contained" className={classes.addUser} onClick={handleAddApplicant}>
-                Add applicant
+                Add Applicant
               </Button>
               <Tooltip title="Reload">
                 <IconButton>
@@ -119,10 +106,19 @@ function Content(props) {
       <div className={classes.contentWrapper}>
         {!list.length ? (
           <Typography color="textSecondary" align="center">
-            No users for this project yet
+            No Applicants for this project yet
           </Typography>) : (
-          <ApplicantsList items={list}></ApplicantsList>
-          )}
+          <List>
+          {list.map(
+            (item) => (
+              <ListItem key={item.id}><ListItemText>{item.name}</ListItemText>
+                <IconButton aria-label="delete" onClick={() => handleRemoveApplicant(item.id)}>
+                  <DeleteButton />
+                </IconButton>
+              </ListItem>)
+            )}
+          </List>
+            )}
       </div>
     </Paper>
   );
