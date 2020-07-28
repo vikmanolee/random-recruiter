@@ -60,6 +60,7 @@ function Content(props) {
 
   const [list, setList] = React.useState([sampleJob]);
   const [jobName, setJobName] = React.useState('');
+  const [chosenOne, setChosenOne] = React.useState(-1);
 
   function handleAddJob() {
     if (jobName !== '') {
@@ -80,7 +81,7 @@ function Content(props) {
 
   function handleAddApplicant(jobId) {
     const newList = list.map((item) => {
-      if (item.id === jobId) {
+      if (item.id === jobId && item.newApplicantName !== '') {
         const updatedItem = {
           ...item,
           applicants: item.applicants.concat({name: item.newApplicantName, id: uuidv4()}),
@@ -123,7 +124,34 @@ function Content(props) {
   }
 
   function hire(jobId) {
-    alert("Hired!! " + jobId);
+    const job = list.find(item => item.id === jobId);
+    const jobApplicants = job.applicants.length;
+    chooseLuckyOne(jobApplicants)
+      .then((luckyNumber) => {
+        setChosenOne(luckyNumber);
+        applyChosenOne(luckyNumber, jobId)
+      });
+  }
+
+  function applyChosenOne(chosen, jobId) {
+    console.log('job: ' + jobId + ' > ' + chosen);
+  }
+
+  function chooseLuckyOne(applicantNumber) {
+    const max = applicantNumber - 1;
+    return fetch(`https://www.random.org/integers/?num=1&min=0&max=${max}&col=1&base=10&format=plain&rnd=new`)
+      .then(res => res.text())
+      .then(
+        (result) => {
+          console.log('For transparency reasons, the plain result was: ' + result);
+          var intResult = parseInt(result);
+          return intResult;
+        },
+        (error) => {
+          console.log(error);
+          return -2;
+        }
+      )
   }
 
   return (
