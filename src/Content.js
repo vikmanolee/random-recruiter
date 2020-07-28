@@ -53,7 +53,7 @@ const styles = (theme) => ({
   },
 });
 
-const sampleJob = {id: '1', name: 'True Dat', newApplicantName: '', applicants: [{id: '1', name: 'Foo', isHired: false}, {id: '2', name: 'Bar', isHired: false}]};
+const sampleJob = {id: '1', name: 'An easy job', newApplicantName: '', applicants: [{id: '1', name: 'Foo', isHired: false}, {id: '2', name: 'Bar', isHired: false}]};
 const hired = <span> (Hired!)</span>;
 
 function Content(props) {
@@ -259,8 +259,11 @@ function Content(props) {
                 </List>
               </CardContent>
               <CardActions>
-                <Button size="small" aria-label="delete" onClick={() => handleRemoveJob(item.id)}>REMOVE</Button>
-                <Button size="small" aria-label="assign" onClick={() => hire(item.id)}>HIRE!</Button>
+                <IconButton aria-label="delete" onClick={() => handleRemoveJob(item.id)}>
+                  <DeleteButton />
+                </IconButton>
+                {/* <Button size="small" aria-label="delete" onClick={() => handleRemoveJob(item.id)}>Remove Job</Button> */}
+                <Button size="large" aria-label="assign" onClick={() => hire(item.id)}>HIRE!</Button>
               </CardActions>
             </Card>
               )
