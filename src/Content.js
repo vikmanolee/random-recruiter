@@ -53,7 +53,8 @@ const styles = (theme) => ({
   },
 });
 
-const sampleJob = {id: '1', name: 'True Dat', newApplicantName: '', applicants: [{id: '1', name: 'Foo'}, {id: '2', name: 'Bar'}]};
+const sampleJob = {id: '1', name: 'True Dat', newApplicantName: '', applicants: [{id: '1', name: 'Foo', isHired: false}, {id: '2', name: 'Bar', isHired: false}]};
+const hired = <span> (Hired!)</span>;
 
 function Content(props) {
   const { classes } = props;
@@ -84,7 +85,7 @@ function Content(props) {
       if (item.id === jobId && item.newApplicantName !== '') {
         const updatedItem = {
           ...item,
-          applicants: item.applicants.concat({name: item.newApplicantName, id: uuidv4()}),
+          applicants: item.applicants.concat({name: item.newApplicantName, id: uuidv4(), isHired: false}),
           newApplicantName: ''
         };
         return updatedItem;
@@ -126,7 +127,7 @@ function Content(props) {
   function hire(jobId) {
     const job = list.find(item => item.id === jobId);
     const jobApplicants = job.applicants.length;
-    chooseLuckyOne(jobApplicants)
+    getLuckyNumber(jobApplicants)
       .then((luckyNumber) => {
         setChosenOne(luckyNumber);
         applyChosenOne(luckyNumber, jobId)
@@ -135,9 +136,25 @@ function Content(props) {
 
   function applyChosenOne(chosen, jobId) {
     console.log('job: ' + jobId + ' > ' + chosen);
+    const newList = list.map((item) => {
+      if (item.id === jobId) {
+        const updatedItem = {
+          ...item,
+          applicants: item.applicants.map((applicant, index) => {
+              return {
+                ...applicant,
+                isHired: (index === chosen)
+              };
+          })
+        };
+        return updatedItem;
+      }
+      return item;
+    });
+    setList(newList);
   }
 
-  function chooseLuckyOne(applicantNumber) {
+  function getLuckyNumber(applicantNumber) {
     const max = applicantNumber - 1;
     return fetch(`https://www.random.org/integers/?num=1&min=0&max=${max}&col=1&base=10&format=plain&rnd=new`)
       .then(res => res.text())
@@ -233,7 +250,7 @@ function Content(props) {
                   {item.applicants.map(
                     (applicant) => (
                     <ListItem key={applicant.id}>
-                      <ListItemText>{applicant.name}</ListItemText>
+                      <ListItemText>{applicant.name}{applicant.isHired? hired : null}</ListItemText>
                       <IconButton aria-label="delete" onClick={() => handleRemoveApplicant(applicant.id, item.id)}>
                         <DeleteButton />
                       </IconButton>
