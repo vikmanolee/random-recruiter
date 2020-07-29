@@ -10,7 +10,6 @@ import Paper from '@material-ui/core/Paper';
 import Grid from '@material-ui/core/Grid';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
-import Tooltip from '@material-ui/core/Tooltip';
 import IconButton from '@material-ui/core/IconButton';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -22,7 +21,6 @@ import CardContent from '@material-ui/core/CardContent';
 import DeleteButton from '@material-ui/icons/Delete';
 import AssignmentIcon from '@material-ui/icons/Assignment';
 import FaceIcon from '@material-ui/icons/Face';
-import RefreshIcon from '@material-ui/icons/Refresh';
 
 const styles = (theme) => ({
   paper: {
@@ -102,7 +100,7 @@ function Content(props) {
     const newList = list.map((item) => {
       if (item.id === jobId && item.newApplicantName !== '') {
         const newApplicant = {
-          id: uuidv4(), 
+          id: uuidv4(),
           name: item.newApplicantName,
           isHired: false
         };
@@ -219,76 +217,20 @@ function Content(props) {
               <Button variant="contained" className={classes.addUser} onClick={handleAddJob}>
                 Add Job
               </Button>
-              <Tooltip title="Reload">
-                <IconButton>
-                  <RefreshIcon className={classes.block} color="inherit" />
-                </IconButton>
-              </Tooltip>
             </Grid>
           </Grid>
         </Toolbar>
       </AppBar>
       <div className={classes.contentWrapper}>
-        {!list.length ? (
-          <Typography color="textSecondary" align="center">
-            No Jobs for this project yet
-          </Typography>) : (
-            <List>
-              {list.map(
-                (item) => (
-                  <Card className={classes.jobCard} key={item.id}>
-                    <CardContent>
-                      <Typography className={classes.title} color="textPrimary" gutterBottom>
-                        {item.name}
-                      </Typography>
-                      <Toolbar className={classes.searchBarColor}>
-                        <Grid container spacing={2} alignItems="center">
-                          <Grid item>
-                            <FaceIcon className={classes.block} color="inherit" />
-                          </Grid>
-                          <Grid item xs>
-                            <TextField
-                              fullWidth
-                              placeholder="Applicant name"
-                              InputProps={{
-                                disableUnderline: true,
-                                className: classes.searchInput,
-                              }}
-                              value={item.newApplicantName}
-                              onChange={(e) => handleApplicantNameChange(e, item.id)}
-                            />
-                          </Grid>
-                          <Grid item>
-                            <Button variant="contained" className={classes.addUser} onClick={() => handleAddApplicant(item.id)}>
-                              Add Applicant
-                      </Button>
-                          </Grid>
-                        </Grid>
-                      </Toolbar>
-                      <List>
-                        {item.applicants.map(
-                          (applicant) => (
-                            <ListItem key={applicant.id}>
-                              <ListItemText>{applicant.name}{applicant.isHired ? hired : null}</ListItemText>
-                              <IconButton aria-label="delete" onClick={() => handleRemoveApplicant(applicant.id, item.id)}>
-                                <DeleteButton />
-                              </IconButton>
-                            </ListItem>
-                          ))}
-                      </List>
-                    </CardContent>
-                    <CardActions>
-                      <IconButton aria-label="delete" onClick={() => handleRemoveJob(item.id)}>
-                        <DeleteButton />
-                      </IconButton>
-                      {/* <Button size="small" aria-label="delete" onClick={() => handleRemoveJob(item.id)}>Remove Job</Button> */}
-                      <Button size="large" aria-label="assign" onClick={() => hire(item.id)}>HIRE!</Button>
-                    </CardActions>
-                  </Card>
-                )
-              )}
-            </List>
-          )}
+        <JobCards
+          jobs={list}
+          onApplicantNameChange={handleApplicantNameChange}
+          onApplicantAdd={handleAddApplicant}
+          onApplicantRemove={handleRemoveApplicant}
+          onRemove={handleRemoveJob}
+          onHiring={hire}
+          classes={classes}
+        />
       </div>
     </Paper>
   );
@@ -297,5 +239,95 @@ function Content(props) {
 Content.propTypes = {
   classes: PropTypes.object.isRequired,
 };
+
+function JobCards(props) {
+  const { jobs, classes, onApplicantNameChange, onApplicantAdd, onApplicantRemove, onRemove, onHiring } = props
+
+  if (!jobs.length) {
+    return (
+      <Typography color="textSecondary" align="center">
+        No Jobs for this project yet
+      </Typography>);
+  }
+
+  return (
+    <List>
+      {jobs.map(
+        (job) => (
+          <Card className={classes.jobCard} key={job.id}>
+            <CardContent>
+              <Typography variant='h5' color="textPrimary" gutterBottom>
+                {job.name}
+              </Typography>
+              <AddApplicant value={job.newApplicantName} onChange={onApplicantNameChange} onAdd={onApplicantAdd} jobId={job.id} classes={classes} />
+              <div className={classes.contentWrapper}>
+                <ApplicantList applicants={job.applicants} jobId={job.id} onRemove={onApplicantRemove} />
+              </div>
+            </CardContent>
+            <CardActions>
+              <IconButton aria-label="delete" onClick={() => onRemove(job.id)}>
+                <DeleteButton />
+              </IconButton>
+              <Button size="large" aria-label="assign" onClick={() => onHiring(job.id)}>HIRE!</Button>
+            </CardActions>
+          </Card>
+        )
+      )}
+    </List>
+  );
+}
+
+function ApplicantList({ applicants, jobId, onRemove }) {
+  if (!applicants.length) {
+    return (
+      <Typography color="textSecondary" align="center">
+        No Applicants for this project yet
+      </Typography>
+    )
+  }
+
+  return (
+    <List>
+      {applicants.map(
+        (applicant) => (
+          <ListItem key={applicant.id}>
+            <ListItemText>{applicant.name}{applicant.isHired ? hired : null}</ListItemText>
+            <IconButton aria-label="delete" onClick={() => onRemove(applicant.id, jobId)}>
+              <DeleteButton />
+            </IconButton>
+          </ListItem>
+        ))}
+    </List>
+  )
+}
+
+function AddApplicant({ value, onChange, onAdd, jobId, classes }) {
+  return (
+    <Toolbar className={classes.searchBarColor}>
+      <Grid container spacing={2} alignItems="center">
+        <Grid item>
+          <FaceIcon className={classes.block} color="inherit" />
+        </Grid>
+        <Grid item xs>
+          <TextField
+            fullWidth
+            placeholder="Applicant name"
+            InputProps={{
+              disableUnderline: true,
+              className: classes.searchInput,
+            }}
+            value={value}
+            onChange={(e) => onChange(e, jobId)}
+          />
+        </Grid>
+        <Grid item>
+          <Button variant="contained" className={classes.addUser} onClick={() => onAdd(jobId)}>
+            Add Applicant
+        </Button>
+        </Grid>
+      </Grid>
+    </Toolbar>
+  );
+}
 
 export default withStyles(styles)(Content);
