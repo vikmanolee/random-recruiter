@@ -1,5 +1,9 @@
 # The Random Recruiter
 
+## Live preview
+
+Also available on vikmanolee.github.io/random-recruiter .
+
 ## How to use
 
 Download the app
