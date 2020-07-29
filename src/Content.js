@@ -1,5 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { v4 as uuidv4 } from 'uuid';
+
+import { withStyles } from '@material-ui/core/styles';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
@@ -9,18 +12,17 @@ import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import Tooltip from '@material-ui/core/Tooltip';
 import IconButton from '@material-ui/core/IconButton';
-import DeleteButton from '@material-ui/icons/Delete';
-import AssignmentIcon from '@material-ui/icons/Assignment';
-import FaceIcon from '@material-ui/icons/Face';
-import { withStyles } from '@material-ui/core/styles';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
-import RefreshIcon from '@material-ui/icons/Refresh';
-import { ListItemText } from '@material-ui/core';
-import { v4 as uuidv4 } from 'uuid';
+import ListItemText from '@material-ui/core/ListItemText';
 import Card from '@material-ui/core/Card';
 import CardActions from '@material-ui/core/CardActions';
 import CardContent from '@material-ui/core/CardContent';
+
+import DeleteButton from '@material-ui/icons/Delete';
+import AssignmentIcon from '@material-ui/icons/Assignment';
+import FaceIcon from '@material-ui/icons/Face';
+import RefreshIcon from '@material-ui/icons/Refresh';
 
 const styles = (theme) => ({
   paper: {
@@ -53,7 +55,24 @@ const styles = (theme) => ({
   },
 });
 
-const sampleJob = {id: '1', name: 'An easy job', newApplicantName: '', applicants: [{id: '1', name: 'Foo', isHired: false}, {id: '2', name: 'Bar', isHired: false}]};
+const sampleJob = {
+  id: '1',
+  name: 'An easy job',
+  newApplicantName: '',
+  applicants: [
+    {
+      id: '1',
+      name: 'Foo',
+      isHired: false
+    },
+    {
+      id: '2',
+      name: 'Bar',
+      isHired: false
+    }
+  ]
+};
+
 const hired = <span> (Hired!)</span>;
 
 function Content(props) {
@@ -61,7 +80,6 @@ function Content(props) {
 
   const [list, setList] = React.useState([sampleJob]);
   const [jobName, setJobName] = React.useState('');
-  const [chosenOne, setChosenOne] = React.useState(-1);
 
   function handleAddJob() {
     if (jobName !== '') {
@@ -83,12 +101,16 @@ function Content(props) {
   function handleAddApplicant(jobId) {
     const newList = list.map((item) => {
       if (item.id === jobId && item.newApplicantName !== '') {
-        const updatedItem = {
+        const newApplicant = {
+          id: uuidv4(), 
+          name: item.newApplicantName,
+          isHired: false
+        };
+        return {
           ...item,
-          applicants: item.applicants.concat({name: item.newApplicantName, id: uuidv4(), isHired: false}),
+          applicants: item.applicants.concat(newApplicant),
           newApplicantName: ''
         };
-        return updatedItem;
       }
       return item;
     });
@@ -98,26 +120,24 @@ function Content(props) {
   function handleRemoveApplicant(id, jobId) {
     const newList = list.map((item) => {
       if (item.id === jobId) {
-        const updatedItem = {
+        return {
           ...item,
           applicants: item.applicants.filter((applicant) => applicant.id !== id),
         };
-        return updatedItem;
       }
       return item;
     });
- 
+
     setList(newList);
   }
 
   function handleApplicantNameChange(event, jobId) {
     const newList = list.map((item) => {
       if (item.id === jobId) {
-        const updatedItem = {
+        return {
           ...item,
           newApplicantName: event.target.value
         };
-        return updatedItem;
       }
       return item;
     });
@@ -129,7 +149,6 @@ function Content(props) {
     const jobApplicants = job.applicants.length;
     getLuckyNumber(jobApplicants)
       .then((luckyNumber) => {
-        setChosenOne(luckyNumber);
         applyChosenOne(luckyNumber, jobId)
       });
   }
@@ -138,16 +157,16 @@ function Content(props) {
     console.log('job: ' + jobId + ' > ' + chosen);
     const newList = list.map((item) => {
       if (item.id === jobId) {
-        const updatedItem = {
+        const updatedApplicants = item.applicants.map((applicant, index) => {
+          return {
+            ...applicant,
+            isHired: (index === chosen)
+          };
+        });
+        return {
           ...item,
-          applicants: item.applicants.map((applicant, index) => {
-              return {
-                ...applicant,
-                isHired: (index === chosen)
-              };
-          })
+          applicants: updatedApplicants
         };
-        return updatedItem;
       }
       return item;
     });
@@ -214,62 +233,62 @@ function Content(props) {
           <Typography color="textSecondary" align="center">
             No Jobs for this project yet
           </Typography>) : (
-          <List>
-          {list.map(
-            (item) => (
-            <Card className={classes.jobCard} key={item.id}>
-              <CardContent>
-                <Typography className={classes.title} color="textPrimary" gutterBottom>
-                  {item.name}
-                </Typography>
-                <Toolbar className={classes.searchBarColor}>
-                  <Grid container spacing={2} alignItems="center">
-                    <Grid item>
-                      <FaceIcon className={classes.block} color="inherit" />
-                    </Grid>
-                    <Grid item xs>
-                      <TextField
-                        fullWidth
-                        placeholder="Applicant name"
-                        InputProps={{
-                          disableUnderline: true,
-                          className: classes.searchInput,
-                        }}
-                        value={item.newApplicantName}
-                        onChange={(e) => handleApplicantNameChange(e, item.id)}
-                      />
-                    </Grid>
-                    <Grid item>
-                      <Button variant="contained" className={classes.addUser} onClick={() => handleAddApplicant(item.id)}>
-                        Add Applicant
+            <List>
+              {list.map(
+                (item) => (
+                  <Card className={classes.jobCard} key={item.id}>
+                    <CardContent>
+                      <Typography className={classes.title} color="textPrimary" gutterBottom>
+                        {item.name}
+                      </Typography>
+                      <Toolbar className={classes.searchBarColor}>
+                        <Grid container spacing={2} alignItems="center">
+                          <Grid item>
+                            <FaceIcon className={classes.block} color="inherit" />
+                          </Grid>
+                          <Grid item xs>
+                            <TextField
+                              fullWidth
+                              placeholder="Applicant name"
+                              InputProps={{
+                                disableUnderline: true,
+                                className: classes.searchInput,
+                              }}
+                              value={item.newApplicantName}
+                              onChange={(e) => handleApplicantNameChange(e, item.id)}
+                            />
+                          </Grid>
+                          <Grid item>
+                            <Button variant="contained" className={classes.addUser} onClick={() => handleAddApplicant(item.id)}>
+                              Add Applicant
                       </Button>
-                    </Grid>
-                  </Grid>
-                </Toolbar>
-                <List>
-                  {item.applicants.map(
-                    (applicant) => (
-                    <ListItem key={applicant.id}>
-                      <ListItemText>{applicant.name}{applicant.isHired? hired : null}</ListItemText>
-                      <IconButton aria-label="delete" onClick={() => handleRemoveApplicant(applicant.id, item.id)}>
+                          </Grid>
+                        </Grid>
+                      </Toolbar>
+                      <List>
+                        {item.applicants.map(
+                          (applicant) => (
+                            <ListItem key={applicant.id}>
+                              <ListItemText>{applicant.name}{applicant.isHired ? hired : null}</ListItemText>
+                              <IconButton aria-label="delete" onClick={() => handleRemoveApplicant(applicant.id, item.id)}>
+                                <DeleteButton />
+                              </IconButton>
+                            </ListItem>
+                          ))}
+                      </List>
+                    </CardContent>
+                    <CardActions>
+                      <IconButton aria-label="delete" onClick={() => handleRemoveJob(item.id)}>
                         <DeleteButton />
                       </IconButton>
-                    </ListItem>
-                  ))}
-                </List>
-              </CardContent>
-              <CardActions>
-                <IconButton aria-label="delete" onClick={() => handleRemoveJob(item.id)}>
-                  <DeleteButton />
-                </IconButton>
-                {/* <Button size="small" aria-label="delete" onClick={() => handleRemoveJob(item.id)}>Remove Job</Button> */}
-                <Button size="large" aria-label="assign" onClick={() => hire(item.id)}>HIRE!</Button>
-              </CardActions>
-            </Card>
-              )
-            )}
-          </List>
-            )}
+                      {/* <Button size="small" aria-label="delete" onClick={() => handleRemoveJob(item.id)}>Remove Job</Button> */}
+                      <Button size="large" aria-label="assign" onClick={() => hire(item.id)}>HIRE!</Button>
+                    </CardActions>
+                  </Card>
+                )
+              )}
+            </List>
+          )}
       </div>
     </Paper>
   );
